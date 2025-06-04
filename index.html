@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAYATO ELITE KALI LINUX TERMINAL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000000;
+            color: #00ff00;
+            font-family: 'Fira Code', monospace;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .terminal-container {
+            min-height: 100vh;
+            background: black;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Terminal Header */
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #1a1a1a;
+            border-bottom: 2px solid #00ff00;
+            padding: 12px 16px;
+        }
+
+        .window-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .control-dot.red { background: #ff5555; }
+        .control-dot.yellow { background: #ffff55; }
+        .control-dot.green { background: #55ff55; }
+
+        .terminal-title {
+            font-size: 14px;
+            color: #00ff00;
+            margin-left: 16px;
+        }
+
+        .header-right {
+            color: #00ff00;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Terminal Content */
+        .terminal-content {
+            flex: 1;
+            background: black;
+            color: #00ff00;
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            padding: 16px;
+            overflow-y: auto;
+            height: calc(100vh - 60px);
+        }
+
+        .terminal-line {
+            line-height: 1.6;
+            margin-bottom: 4px;
+        }
+
+        .command-line {
+            display: flex;
+            align-items: center;
+        }
+
+        .prompt {
+            color: #00ff00;
+            white-space: pre;
+        }
+
+        .prompt.root {
+            color: #ff4444;
+        }
+
+        .command-text {
+            color: white;
+            margin-left: 8px;
+        }
+
+        .output {
+            color: #00ff99;
+        }
+
+        .error {
+            color: #ff4444;
+        }
+
+        .system {
+            color: #44aaff;
+            font-weight: bold;
+        }
+
+        .warning {
+            color: #ffaa44;
+            font-weight: bold;
+        }
+
+        /* Input Area */
+        .input-area {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .input-prompt {
+            color: #00ff00;
+            white-space: pre;
+        }
+
+        .input-prompt.root {
+            color: #ff4444;
+        }
+
+        .terminal-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: white;
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            margin-left: 8px;
+            caret-color: #00ff00;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background: #00ff00;
+            margin-left: 4px;
+            animation: blink 1s infinite;
+        }
+
+        /* Boot Sequence Styling */
+        .boot-header {
+            color: #44aaff;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .ascii-art {
+            color: #44aaff;
+            font-weight: bold;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        /* Animations */
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        @keyframes typing {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .typing {
+            animation: typing 0.5s ease-in;
+        }
+
+        /* Special file and directory colors */
+        .file { color: #ff6b6b; }
+        .dir { color: #4ecdc4; }
+        .executable { color: #ffeb3b; }
+
+        /* Hide scrollbar but keep functionality */
+        .terminal-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .terminal-content::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        .terminal-content::-webkit-scrollbar-thumb {
+            background: #00ff00;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal-container">
+        <!-- Terminal Header -->
+        <div class="terminal-header">
+            <div style="display: flex; align-items: center;">
+                <div class="window-controls">
+                    <div class="control-dot red"></div>
+                    <div class="control-dot yellow"></div>
+                    <div class="control-dot green"></div>
+                </div>
+                <span class="terminal-title" id="terminalTitle">hayato@kali: ~/elite-tools</span>
+            </div>
+            <div class="header-right">HAYATO ELITE TERMINAL</div>
+        </div>
+
+        <!-- Terminal Content -->
+        <div class="terminal-content" id="terminalContent">
+            <!-- Content will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        class KaliTerminal {
+            constructor() {
+                this.terminalContent = document.getElementById('terminalContent');
+                this.terminalTitle = document.getElementById('terminalTitle');
+                this.currentUser = 'hayato';
+                this.currentPath = '/home/hayato/elite-tools';
+                this.isRoot = false;
+                this.commandHistory = [];
+                this.historyIndex = -1;
+                this.isTyping = false;
+                
+                this.commands = {
+                    'whoami': () => [{ type: 'output', content: this.currentUser }],
+                    'pwd': () => [{ type: 'output', content: this.currentPath }],
+                    'sudo su': () => {
+                        this.currentUser = 'root';
+                        this.isRoot = true;
+                        this.currentPath = '/root';
+                        this.updateTitle();
+                        return [
+                            { type: 'warning', content: '[sudo] password for hayato: ••••••••' },
+                            { type: 'system', content: 'ROOT ACCESS GRANTED - WELCOME TO THE ELITE ZONE' }
+                        ];
+                    },
+                    'exit': () => {
+                        if (this.isRoot) {
+                            this.currentUser = 'hayato';
+                            this.isRoot = false;
+                            this.currentPath = '/home/hayato/elite-tools';
+                            this.updateTitle();
+                            return [{ type: 'system', content: 'Exiting root shell...' }];
+                        }
+                        return [{ type: 'output', content: 'logout' }];
+                    },
+                    'ls': () => this.listDirectory(),
+                    'ls -la': () => this.listDirectory(),
+                    'cat /etc/os-release': () => [
+                        { type: 'output', content: 'PRETTY_NAME="Kali GNU/Linux Rolling"' },
+                        { type: 'output', content: 'NAME="Kali GNU/Linux"' },
+                        { type: 'output', content: 'VERSION_ID="2024.4"' },
+                        { type: 'output', content: 'VERSION="2024.4"' },
+                        { type: 'output', content: 'VERSION_CODENAME=kali-rolling' },
+                        { type: 'output', content: 'ID=kali' }
+                    ],
+                    'uname -a': () => [
+                        { type: 'output', content: 'Linux kali 6.5.0-kali3-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.5.6-1kali1 (2023-10-09) x86_64 GNU/Linux' }
+                    ],
+                    'id': () => [
+                        { type: 'output', content: this.isRoot ? 'uid=0(root) gid=0(root) groups=0(root)' : 'uid=1000(hayato) gid=1000(hayato) groups=1000(hayato),24(cdrom),25(floppy),27(sudo),29(audio),30(dip),44(video),46(plugdev),108(netdev),112(bluetooth),116(lpadmin),117(scanner)' }
+                    ],
+                    'nmap --version': () => [
+                        { type: 'output', content: 'Nmap version 7.94 ( https://nmap.org )' },
+                        { type: 'output', content: 'Platform: x86_64-pc-linux-gnu' },
+                        { type: 'output', content: 'Compiled with: liblua-5.4.4 openssl-3.0.11 nmap-libssh2-1.11.0 libz-1.2.13 libpcre-8.39 libpcap-1.10.4 nmap-libdnet-1.12 ipv6' }
+                    ],
+                    'nmap -sS 192.168.1.1': () => [
+                        { type: 'system', content: 'Starting Nmap 7.94 ( https://nmap.org ) at ' + new Date().toLocaleString() },
+                        { type: 'output', content: 'Nmap scan report for router.local (192.168.1.1)' },
+                        { type: 'output', content: 'Host is up (0.0012s latency).' },
+                        { type: 'output', content: 'Not shown: 997 closed ports' },
+                        { type: 'output', content: 'PORT     STATE SERVICE' },
+                        { type: 'output', content: '22/tcp   open  ssh' },
+                        { type: 'output', content: '80/tcp   open  http' },
+                        { type: 'output', content: '443/tcp  open  https' },
+                        { type: 'output', content: '' },
+                        { type: 'system', content: 'Nmap done: 1 IP address (1 host up) scanned in 0.25 seconds' }
+                    ],
+                    'msfconsole --version': () => [
+                        { type: 'output', content: 'Framework Version: 6.3.40-dev' }
+                    ],
+                    'python3 --version': () => [
+                        { type: 'output', content: 'Python 3.11.6' }
+                    ],
+                    'ifconfig': () => [
+                        { type: 'output', content: 'eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500' },
+                        { type: 'output', content: '        inet 192.168.1.100  netmask 255.255.255.0  broadcast 192.168.1.255' },
+                        { type: 'output', content: '        inet6 fe80::a00:27ff:fe4e:66a1  prefixlen 64  scopeid 0x20<link>' },
+                        { type: 'output', content: '        ether 08:00:27:4e:66:a1  txqueuelen 1000  (Ethernet)' }
+                    ],
+                    'ps aux': () => [
+                        { type: 'output', content: 'USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND' },
+                        { type: 'output', content: 'root           1  0.1  0.1  16888  1064 ?        Ss   Dec04   0:01 /sbin/init' },
+                        { type: 'output', content: 'root         123  0.0  0.2  23456  2048 ?        S    Dec04   0:00 /usr/sbin/sshd' },
+                        { type: 'output', content: 'hayato      1337  0.5  1.2  45678  4096 pts/0    S+   Dec04   0:05 ./exploit.py' }
+                    ],
+                    'netstat -tulpn': () => [
+                        { type: 'output', content: 'Active Internet connections (only servers)' },
+                        { type: 'output', content: 'Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name' },
+                        { type: 'output', content: 'tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      123/sshd' },
+                        { type: 'output', content: 'tcp        0      0 127.0.0.1:5432          0.0.0.0:*               LISTEN      456/postgres' }
+                    ],
+                    'date': () => [
+                        { type: 'output', content: new Date().toString() }
+                    ],
+                    'history': () => this.commandHistory.map((cmd, i) => ({ 
+                        type: 'output', 
+                        content: `  ${i + 1}  ${cmd}` 
+                    })),
+                    'clear': () => {
+                        this.terminalContent.innerHTML = '';
+                        this.createInputLine();
+                        return [];
+                    },
+                    'help': () => [
+                        { type: 'system', content: '╔══════════════════════════════════════════════════════════════╗' },
+                        { type: 'system', content: '║              HAYATO ELITE KALI LINUX TERMINAL               ║' },
+                        { type: 'system', content: '║                    AVAILABLE COMMANDS                       ║' },
+                        { type: 'system', content: '╚══════════════════════════════════════════════════════════════╝' },
+                        { type: 'output', content: '' },
+                        { type: 'output', content: '🔧 SYSTEM COMMANDS:' },
+                        { type: 'output', content: '  whoami          - Display current user' },
+                        { type: 'output', content: '  pwd             - Print working directory' },
+                        { type: 'output', content: '  ls / ls -la     - List directory contents' },
+                        { type: 'output', content: '  id              - Show user and group IDs' },
+                        { type: 'output', content: '  sudo su         - Switch to root user' },
+                        { type: 'output', content: '  exit            - Exit current shell' },
+                        { type: 'output', content: '' },
+                        { type: 'output', content: '📊 SYSTEM INFO:' },
+                        { type: 'output', content: '  cat /etc/os-release - Show OS information' },
+                        { type: 'output', content: '  uname -a        - System information' },
+                        { type: 'output', content: '  ifconfig        - Network configuration' },
+                        { type: 'output', content: '  ps aux          - Running processes' },
+                        { type: 'output', content: '  netstat -tulpn  - Network connections' },
+                        { type: 'output', content: '' },
+                        { type: 'output', content: '🛡️ SECURITY TOOLS:' },
+                        { type: 'output', content: '  nmap --version  - Nmap version' },
+                        { type: 'output', content: '  nmap -sS <ip>   - TCP SYN scan' },
+                        { type: 'output', content: '  msfconsole --version - Metasploit version' },
+                        { type: 'output', content: '  python3 --version - Python version' },
+                        { type: 'output', content: '' },
+                        { type: 'output', content: '🎮 TERMINAL:' },
+                        { type: 'output', content: '  clear           - Clear terminal' },
+                        { type: 'output', content: '  history         - Show command history' },
+                        { type: 'output', content: '  date            - Show current date/time' }
+                    ]
+                };
+
+                this.init();
+            }
+
+            listDirectory() {
+                if (this.isRoot) {
+                    return [
+                        { type: 'output', content: 'total 128' },
+                        { type: 'output', content: 'drwxr-xr-x  10 root root   4096 Dec 04 2024 .' },
+                        { type: 'output', content: 'drwxr-xr-x  20 root root   4096 Dec 04 2024 ..' },
+                        { type: 'output', content: '-rwx------   1 root root  16384 Dec 04 2024 <span class="file">exploit_toolkit.py</span>' },
+                        { type: 'output', content: '-rwx------   1 root root   8192 Dec 04 2024 <span class="file">advanced_scanner.sh</span>' },
+                        { type: 'output', content: '-rwx------   1 root root   4096 Dec 04 2024 <span class="file">payload_injector.py</span>' },
+                        { type: 'output', content: 'drwx------   2 root root   4096 Dec 04 2024 <span class="dir">classified</span>' },
+                        { type: 'output', content: 'drwx------   2 root root   4096 Dec 04 2024 <span class="dir">zero_day_exploits</span>' }
+                    ];
+                }
+                return [
+                    { type: 'output', content: 'total 64' },
+                    { type: 'output', content: 'drwxr-xr-x  8 hayato hayato  4096 Dec 04 2024 .' },
+                    { type: 'output', content: 'drwxr-xr-x 12 hayato hayato  4096 Dec 04 2024 ..' },
+                    { type: 'output', content: '-rwxr-xr-x  1 hayato hayato  8192 Dec 04 2024 <span class="file">exploit.py</span>' },
+                    { type: 'output', content: '-rwxr-xr-x  1 hayato hayato  4096 Dec 04 2024 <span class="file">nmap_scanner.sh</span>' },
+                    { type: 'output', content: '-rwxr-xr-x  1 hayato hayato  2048 Dec 04 2024 <span class="file">payload_gen.py</span>' },
+                    { type: 'output', content: 'drwxr-xr-x  2 hayato hayato  4096 Dec 04 2024 <span class="dir">metasploit</span>' },
+                    { type: 'output', content: 'drwxr-xr-x  2 hayato hayato  4096 Dec 04 2024 <span class="dir">wordlists</span>' }
+                ];
+            }
+
+            updateTitle() {
+                const path = this.currentPath.replace(`/home/${this.currentUser}`, '~').replace('/root', '~');
+                this.terminalTitle.textContent = `${this.currentUser}@kali: ${path}`;
+            }
+
+            getPrompt() {
+                const user = this.currentUser;
+                const host = "kali";
+                const symbol = this.isRoot ? "#" : "$";
+                const path = this.currentPath.replace(`/home/${this.currentUser}`, '~').replace('/root', '~');
+                return `┌──(${user}@${host})-[${path}]\n└─${symbol}`;
+            }
+
+            addLine(content, type = 'output') {
+                const line = document.createElement('div');
+                line.className = 'terminal-line';
+                
+                if (type === 'command') {
+                    line.innerHTML = `<div class="command-line">
+                        <span class="prompt ${this.isRoot ? 'root' : ''}">${this.getPrompt()}</span>
+                        <span class="command-text">${content}</span>
+                    </div>`;
+                } else {
+                    line.innerHTML = `<div class="${type}">${content}</div>`;
+                }
+                
+                this.terminalContent.appendChild(line);
+                this.scrollToBottom();
+            }
+
+            createInputLine() {
+                const inputContainer = document.createElement('div');
+                inputContainer.className = 'input-area';
+                inputContainer.innerHTML = `
+                    <span class="input-prompt ${this.isRoot ? 'root' : ''}">${this.getPrompt()}</span>
+                    <input type="text" class="terminal-input" autocomplete="off" spellcheck="false">
+                    <span class="cursor"></span>
+                `;
+                
+                this.terminalContent.appendChild(inputContainer);
+                
+                const input = inputContainer.querySelector('.terminal-input');
+                input.focus();
+                
+                input.addEventListener('keydown', (e) => this.handleKeyDown(e, input, inputContainer));
+                
+                this.scrollToBottom();
+            }
+
+            async handleKeyDown(e, input, inputContainer) {
+                if (e.key === 'Enter' && input.value.trim() && !this.isTyping) {
+                    const command = input.value.trim();
+                    
+                    // Remove input line
+                    inputContainer.remove();
+                    
+                    // Add command to history
+                    this.commandHistory.push(command);
+                    this.historyIndex = this.commandHistory.length;
+                    
+                    // Display command
+                    this.addLine(command, 'command');
+                    
+                    // Execute command
+                    await this.executeCommand(command);
+                    
+                    // Create new input line
+                    this.createInputLine();
+                }
+                
+                // Command history navigation
+                if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (this.historyIndex > 0) {
+                        this.historyIndex--;
+                        input.value = this.commandHistory[this.historyIndex];
+                    }
+                }
+                
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (this.historyIndex < this.commandHistory.length - 1) {
+                        this.historyIndex++;
+                        input.value = this.commandHistory[this.historyIndex];
+                    } else {
+                        this.historyIndex = this.commandHistory.length;
+                        input.value = '';
+                    }
+                }
+            }
+
+            async executeCommand(command) {
+                const lowerCommand = command.toLowerCase();
+                
+                if (lowerCommand === 'clear') {
+                    this.terminalContent.innerHTML = '';
+                    return;
+                }
+                
+                this.isTyping = true;
+                
+                // Simulate typing delay
+                await new Promise(resolve => setTimeout(resolve, Math.random() * 800 + 200));
+                
+                if (this.commands[lowerCommand]) {
+                    const output = this.commands[lowerCommand]();
+                    output.forEach(line => {
+                        this.addLine(line.content, line.type);
+                    });
+                } else {
+                    this.addLine(`bash: ${command}: command not found`, 'error');
+                    this.addLine('Type "help" for available commands.', 'output');
+                }
+                
+                this.isTyping = false;
+            }
+
+            scrollToBottom() {
+                this.terminalContent.scrollTop = this.terminalContent.scrollHeight;
+            }
+
+            init() {
+                // Boot sequence
+                const bootSequence = [
+                    { type: 'system', content: '╔══════════════════════════════════════════════════════════════╗' },
+                    { type: 'system', content: '║  ██╗  ██╗ █████╗ ██╗   ██╗ █████╗ ████████╗ ██████╗        ║' },
+                    { type: 'system', content: '║  ██║  ██║██╔══██╗╚██╗ ██╔╝██╔══██╗╚══██╔══╝██╔═══██╗       ║' },
+                    { type: 'system', content: '║  ███████║███████║ ╚████╔╝ ███████║   ██║   ██║   ██║       ║' },
+                    { type: 'system', content: '║  ██╔══██║██╔══██║  ╚██╔╝  ██╔══██║   ██║   ██║   ██║       ║' },
+                    { type: 'system', content: '║  ██║  ██║██║  ██║   ██║   ██║  ██║   ██║   ╚██████╔╝       ║' },
+                    { type: 'system', content: '║  ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝   ╚═╝    ╚═════╝        ║' },
+                    { type: 'system', content: '║                                                              ║' },
+                    { type: 'system', content: '║             ELITE KALI LINUX TERMINAL v2.0                  ║' },
+                    { type: 'system', content: '║                [ROOT ACCESS ENABLED]                        ║' },
+                    { type: 'system', content: '╚══════════════════════════════════════════════════════════════╝' },
+                    { type: 'output', content: '' },
+                    { type: 'warning', content: '⚠️  WARNING: Unauthorized access to this system is prohibited!' },
+                    { type: 'output', content: 'Last login: Wed Dec  4 12:00:00 2024 from 192.168.1.1' },
+                    { type: 'output', content: 'Welcome to Kali GNU/Linux Rolling' },
+                    { type: 'output', content: '' },
+                    { type: 'system', content: '💡 Type "help" for available commands or "sudo su" for root access' },
+                    { type: 'output', content: '' }
+                ];
+
+                bootSequence.forEach(line => {
+                    this.addLine(line.content, line.type);
+                });
+
+                this.createInputLine();
+            }
+        }
+
+        // Initialize terminal when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new KaliTerminal();
+        });
+    </script>
+</body>
+</html>
